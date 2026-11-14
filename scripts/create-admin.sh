@@ -2,7 +2,7 @@
 set -e
 read -p "Admin name: " NAME
 read -p "Admin email: " EMAIL
-read -s -p "Password (minimum 12 chars): " PASSWORD
+read -s -p "Password (minimum 8 chars): " PASSWORD
 echo
 curl -sS -X POST http://127.0.0.1:4000/api/v1/auth/register \
  -H 'Content-Type: application/json' \

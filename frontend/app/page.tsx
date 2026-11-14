@@ -5,7 +5,7 @@ type Account={id:string;platform:string;display_name:string;enabled:boolean};
 type Conversation={id:string;platform:string;account_name:string;contact_name:string;external_id:string;mode:string;last_message:string};
 type Message={id:string;direction:string;sender_type:string;body:string;created_at:string};
 export default function Home(){
- const [token,setToken]=useState('');const [email,setEmail]=useState('');const [password,setPassword]=useState('');
+ const [token,setToken]=useState('');const [email,setEmail]=useState('');const [password,setPassword]=useState('');const [authMode,setAuthMode]=useState<'login'|'register'>('login');const [ownerName,setOwnerName]=useState('');
  const [accounts,setAccounts]=useState<Account[]>([]);const [convos,setConvos]=useState<Conversation[]>([]);
  const [selected,setSelected]=useState('');const [messages,setMessages]=useState<Message[]>([]);const [text,setText]=useState('');
  const [status,setStatus]=useState('Sign in or create the first workspace owner account.');
@@ -16,7 +16,9 @@ export default function Home(){
   const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||`Request failed ${r.status}`);return data;
  }
  async function login(mode:'login'|'register'){
-  try{const data=await call('/auth/'+mode,'POST',mode==='login'?{email,password}:{name:'Workspace Owner',email,password});
+  if(password.length<8){setStatus('Password must be at least 8 characters.');return;}
+  if(mode==='register'&&!ownerName.trim()){setStatus('Enter your name to create a workspace.');return;}
+  try{const data=await call('/auth/'+mode,'POST',mode==='login'?{email,password}:{name:ownerName.trim(),email,password});
    setToken(data.token);localStorage.setItem('omniagent_token',data.token);setStatus('Connected. Your workspace is ready.');}
   catch(e:any){setStatus(e.message)}
  }
@@ -36,7 +38,7 @@ export default function Home(){
  return <main className="shell">
   <header className="top"><div><h1>🤖 OmniAgent AI</h1><div className="muted">One inbox. Multiple platforms. AI + human support.</div></div><span className="pill">MVP · Multi-account</span></header>
   <p className="muted">{status}</p>
-  {!token?<section className="panel"><h2>Workspace access</h2><label>Email</label><input className="field" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/><label>Password (12+ characters for registration)</label><input className="field" type="password" value={password} onChange={e=>setPassword(e.target.value)}/><div className="row"><button className="btn" onClick={()=>login('login')}>Sign in</button><button className="btn secondary" onClick={()=>login('register')}>Create workspace</button></div></section>:
+  {!token?<section className="panel"><h2>{authMode==='login'?'Sign in':'Create your workspace'}</h2><p className="muted">{authMode==='login'?'Sign in to access your OmniAgent workspace.':'Create an owner account and your new workspace.'}</p>{authMode==='register'&&<><label>Your name</label><input className="field" value={ownerName} onChange={e=>setOwnerName(e.target.value)} placeholder="Your name"/></>}<label>Email</label><input className="field" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/><label>Password (minimum 8 characters)</label><input className="field" type="password" minLength={8} value={password} onChange={e=>setPassword(e.target.value)} autoComplete={authMode==='login'?'current-password':'new-password'}/>{authMode==='login'?<><button className="btn" onClick={()=>login('login')}>Sign in</button><p className="muted">New to OmniAgent? <button className="btn secondary" onClick={()=>{setAuthMode('register');setStatus('Create your workspace account.')}}>Create workspace</button></p></>:<><button className="btn" onClick={()=>login('register')}>Create workspace</button><p className="muted">Already have a workspace? <button className="btn secondary" onClick={()=>{setAuthMode('login');setStatus('Sign in to your workspace.')}}>Back to sign in</button></p></>}</section>:
   <>
    <section className="grid"><div className="card"><div className="muted">Connected account records</div><h2>{accounts.length}</h2></div><div className="card"><div className="muted">Conversations</div><h2>{convos.length}</h2></div><div className="card"><div className="muted">AI mode</div><h2>Human takeover ready</h2></div></section>
    <section className="panel"><h2>Connect a platform account</h2><div className="grid">

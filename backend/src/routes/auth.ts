@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { pool } from '../db/pool.js';
 const r = Router();
-const schema = z.object({name:z.string().min(1),email:z.string().email(),password:z.string().min(12)});
+const schema = z.object({name:z.string().min(1),email:z.string().email(),password:z.string().min(8)});
 r.post('/register',async(req,res,next)=>{
   try {
     if (process.env.ALLOW_REGISTRATION === 'false') return res.status(403).json({error:'Registration disabled'});
